@@ -12,7 +12,7 @@ def load_rag_prompt():
         return file.read()
 
 
-def create_llm():\
+def create_llm():
     return ChatGroq(
         api_key=os.getenv("GROQ_API_KEY"),
         model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
