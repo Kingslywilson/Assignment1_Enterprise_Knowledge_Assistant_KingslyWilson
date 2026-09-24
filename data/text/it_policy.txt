@@ -1,0 +1,15 @@
+IT Support & Helpdesk Policy
+
+IT Helpdesk Contact:
+Employees requiring technical support must submit a ticket via the IT Portal or email support@enterprise-corp.com.
+Critical security incidents must be reported immediately to the Security Operations Center (SOC).
+
+Password Reset Guidelines:
+All password reset requests must be submitted through the self-service IT Password Reset Portal (https://id.enterprise-corp.com).
+Passwords must be at least 14 characters long and changed every 90 days.
+IT support staff will NEVER ask employees to disclose their passwords over phone, chat, or email.
+
+Network Access & Security:
+Accessing company internal networks requires connecting via corporate VPN with Multi-Factor Authentication (MFA).
+Unauthorized sharing of network credentials or VPN certificates is strictly prohibited.
+Personal devices must enroll in corporate Mobile Device Management (MDM) before accessing company email.
