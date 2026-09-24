@@ -8,7 +8,7 @@ load_dotenv()
 from loaders import load_all_documents
 from preprocess import preprocess_documents, split_documents
 from vector_store import create_vector_store, load_vector_store
-from retriever import search_documents
+from retriever import create_retriever
 from rag_chain import generate_answer
 from memory import create_memory
 
@@ -23,7 +23,6 @@ RELEVANCE_THRESHOLD = 0.35
 
 def build_knowledge_base():
     print("\n--- Knowledge Base Construction ---")
-
     print("Loading documents from PDFs, Text files, and Web sources...")
 
     documents = load_all_documents(
@@ -77,10 +76,13 @@ def get_vector_store():
     return build_knowledge_base()
 
 
-def process_query(vector_store, question: str, memory=None):
+def process_query(retriever, question: str, memory=None):
     conversation_summary = memory.get_summary() if memory else ""
 
-    normalized_question = " ".join(question.strip().lower().split())
+    # Handle clearly ambiguous questions before retrieval.
+    normalized_question = " ".join(
+        question.strip().lower().split()
+    )
 
     if normalized_question.rstrip("?").strip() in {
         "what is the policy",
@@ -94,10 +96,14 @@ def process_query(vector_store, question: str, memory=None):
         )
 
         if memory:
-            memory.save_context(question, clarification)
+            memory.save_context(
+                question,
+                clarification
+            )
 
         return clarification
 
+    # Include previous conversation context for follow-up questions.
     retrieval_query = question
 
     if conversation_summary:
@@ -106,12 +112,7 @@ def process_query(vector_store, question: str, memory=None):
             f"Current question:\n{question}"
         )
 
-    results = search_documents(
-        vector_store,
-        retrieval_query,
-        k=TOP_K,
-        threshold=RELEVANCE_THRESHOLD
-    )
+    results = retriever.invoke(retrieval_query)
 
     if not results:
         fallback_msg = (
@@ -120,11 +121,14 @@ def process_query(vector_store, question: str, memory=None):
         )
 
         if memory:
-            memory.save_context(question, fallback_msg)
+            memory.save_context(
+                question,
+                fallback_msg
+            )
 
         return fallback_msg
 
-    retrieved_docs = [doc for doc, score in results]
+    retrieved_docs = results
 
     answer = generate_answer(
         documents=retrieved_docs,
@@ -133,7 +137,10 @@ def process_query(vector_store, question: str, memory=None):
     )
 
     if memory:
-        memory.save_context(question, answer)
+        memory.save_context(
+            question,
+            answer
+        )
 
     return answer
 
@@ -149,10 +156,15 @@ def main():
 
     vector_store = get_vector_store()
 
+    retriever = create_retriever(
+        vector_store,
+        k=TOP_K,
+        threshold=RELEVANCE_THRESHOLD
+    )
+
     memory = create_memory()
 
     print("\nAssistant initialized and ready.")
-
     print("Commands:")
     print("  'exit'    - Quit application")
     print("  'rebuild' - Re-ingest documents and rebuild vector store\n")
@@ -174,13 +186,20 @@ def main():
 
         if question.lower() == "rebuild":
             vector_store = build_knowledge_base()
+
+            retriever = create_retriever(
+                vector_store,
+                k=TOP_K,
+                threshold=RELEVANCE_THRESHOLD
+            )
+
             memory.clear()
 
             print("Knowledge base rebuilt and memory reset.")
             continue
 
         response = process_query(
-            vector_store,
+            retriever,
             question,
             memory
         )
