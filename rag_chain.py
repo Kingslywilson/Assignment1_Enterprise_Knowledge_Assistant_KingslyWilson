@@ -40,7 +40,6 @@ def format_documents(documents):
         source = metadata.get("source", "Unknown source")
 
         if "page" in metadata:
-            # Display 1-indexed page numbers for human readability
             page_num = metadata["page"] + 1 if isinstance(metadata["page"], int) else metadata["page"]
             source_header = f"[Source: {source} — Page {page_num}]"
         else:
