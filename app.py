@@ -58,6 +58,7 @@ def build_knowledge_base():
     vector_store = create_vector_store(chunks)
 
     print("Vector database successfully built and persisted to disk.\n")
+
     return vector_store
 
 
@@ -79,32 +80,23 @@ def get_vector_store():
 def process_query(vector_store, question: str, memory=None):
     conversation_summary = memory.get_summary() if memory else ""
 
-    # Handle clearly ambiguous questions before retrieval.
-    ambiguous_questions = {
-        "what is the policy?",
-        "what is the policy",
-        "tell me the policy",
-        "what policy?",
-        "which policy?"
-    }
-
     normalized_question = " ".join(question.strip().lower().split())
 
     if normalized_question.rstrip("?").strip() in {
-    "what is the policy",
-    "tell me the policy",
-    "what policy",
-    "which policy"
-}:
-     clarification = (
-        "Could you please specify which policy you mean, "
-        "such as the leave policy, IT policy, or another policy?"
-    )
+        "what is the policy",
+        "tell me the policy",
+        "what policy",
+        "which policy"
+    }:
+        clarification = (
+            "Could you please specify which policy you mean, "
+            "such as the leave policy, IT policy, or another policy?"
+        )
 
-    if memory:
-        memory.save_context(question, clarification)
+        if memory:
+            memory.save_context(question, clarification)
 
-    return clarification
+        return clarification
 
     retrieval_query = question
 
@@ -198,4 +190,4 @@ def main():
 
 
 if __name__ == "__main__":
-       main()
+    main()
